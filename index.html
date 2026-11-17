@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Job Search</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --warn-bg: #fef3c7;
+      --warn-text: #92400e;
+      --ai-bg: #eef2ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 32px 16px 60px; }
+    h1 { margin: 0 0 4px; font-size: 28px; }
+    .sub { margin: 0 0 24px; color: var(--muted); }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    input[type="text"], select {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+    }
+    input[type="text"]:focus, select:focus {
+      outline: 2px solid var(--primary);
+      border-color: transparent;
+    }
+    .row { display: flex; gap: 12px; margin-top: 14px; }
+    .row > div { flex: 1; }
+    button.search {
+      width: 100%;
+      margin-top: 16px;
+      padding: 13px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      background: var(--primary);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button.search:hover { background: var(--primary-dark); }
+    button.search:disabled { opacity: 0.6; cursor: not-allowed; }
+    .examples { margin-top: 14px; font-size: 13px; color: var(--muted); }
+    .chip {
+      display: inline-block;
+      margin: 6px 6px 0 0;
+      padding: 6px 12px;
+      font-size: 13px;
+      color: var(--primary);
+      background: var(--ai-bg);
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .chip:hover { background: #e0e7ff; }
+
+    #status { margin-top: 20px; }
+    .loading {
+      display: flex; align-items: center; gap: 10px;
+      color: var(--muted);
+    }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .answer {
+      background: var(--ai-bg);
+      border: 1px solid #c7d2fe;
+      border-radius: 12px;
+      padding: 14px 16px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .answer .tag { display: block; font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+    .warn {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 600;
+    }
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 600;
+    }
+    h2 { font-size: 16px; margin: 22px 0 8px; }
+    .job {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .job .title { font-weight: 700; }
+    .job .meta { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      margin-left: 6px;
+    }
+    .score { text-align: right; white-space: nowrap; font-weight: 700; color: var(--primary); }
+    .score small { display: block; color: var(--muted); font-weight: 400; }
+    @media (max-width: 520px) { .row { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>AI Job Search</h1>
+    <p class="sub">Describe the job you want. It understands meaning, not just exact words.</p>
+
+    <div class="panel">
+      <label for="q">What are you looking for?</label>
+      <input id="q" type="text" placeholder="e.g. python internship, frontend role, work with LLMs">
+
+      <div class="row">
+        <div>
+          <label for="location">Location</label>
+          <select id="location">
+            <option value="">Any location</option>
+            <option>Bengaluru</option>
+            <option>Gurugram</option>
+            <option>Hyderabad</option>
+            <option>Pune</option>
+            <option>Delhi</option>
+            <option>Remote</option>
+          </select>
+        </div>
+        <div>
+          <label for="job_type">Job type</label>
+          <select id="job_type">
+            <option value="">Any type</option>
+            <option>Internship</option>
+            <option>Full-time</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="search" id="btn" onclick="search()">Search jobs</button>
+
+      <div class="examples">
+        Try an example:
+        <div>
+          <button class="chip" onclick="useExample('frontend internship')">frontend internship</button>
+          <button class="chip" onclick="useExample('which job is best if I know Python and SQL?')">best job for Python and SQL</button>
+          <button class="chip" onclick="useExample('work with LLMs and embeddings')">work with LLMs</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="status"></div>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const qInput = document.getElementById("q");
+    const statusBox = document.getElementById("status");
+    const resultsBox = document.getElementById("results");
+    const btn = document.getElementById("btn");
+
+    qInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") search();
+    });
+
+    function useExample(text) {
+      qInput.value = text;
+      search();
+    }
+
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    async function search() {
+      const q = qInput.value.trim();
+      statusBox.innerHTML = "";
+      resultsBox.innerHTML = "";
+
+      if (!q) {
+        statusBox.appendChild(el("div", "error", "Please type what you are looking for."));
+        return;
+      }
+
+      const params = new URLSearchParams({ q });
+      const location = document.getElementById("location").value;
+      const jobType = document.getElementById("job_type").value;
+      if (location) params.set("location", location);
+      if (jobType) params.set("job_type", jobType);
+
+      const loading = el("div", "loading");
+      loading.appendChild(el("div", "spinner"));
+      loading.appendChild(el("span", "", "Finding the best jobs for you..."));
+      statusBox.appendChild(loading);
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/ask?" + params.toString());
+        if (!res.ok) throw new Error("Server error");
+        const data = await res.json();
+        statusBox.innerHTML = "";
+        render(data);
+      } catch (err) {
+        statusBox.innerHTML = "";
+        statusBox.appendChild(el("div", "error", "Something went wrong. Please try again."));
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function render(data) {
+      if (data.ai_busy) {
+        statusBox.appendChild(el("div", "warn", "Gemini is busy, try again later. Showing the best matching jobs below."));
+      } else {
+        const box = el("div", "answer");
+        box.appendChild(el("span", "tag", "AI ANSWER (Gemini)"));
+        box.appendChild(document.createTextNode(data.answer));
+        resultsBox.appendChild(box);
+      }
+
+      if (!data.jobs.length) return;
+
+      resultsBox.appendChild(el("h2", "", "Top matching jobs"));
+      data.jobs.forEach((j) => {
+        const card = el("div", "job");
+        const left = el("div");
+        const title = el("div", "title", j.title);
+        title.appendChild(el("span", "badge", j.job_type));
+        left.appendChild(title);
+        left.appendChild(el("div", "meta", j.company + " · " + j.location));
+        const right = el("div", "score", Math.round(j.score * 100) + "%");
+        right.appendChild(el("small", "", "match"));
+        card.appendChild(left);
+        card.appendChild(right);
+        resultsBox.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
